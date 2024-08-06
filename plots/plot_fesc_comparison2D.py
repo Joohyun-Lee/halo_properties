@@ -60,7 +60,7 @@ mass_bins = np.logspace(7.5, 12, mnbins)
 fnbins = 45
 fesc_bins = np.logspace(-4, 0, fnbins)
 
-info_path = os.path.join(sim_path, f"output_{out_nb:06d}", "group_000001")
+info_path = os.path.join(sim_path, "outputs", f"output_{out_nb:06d}", "group_000001")
 
 (
     t,

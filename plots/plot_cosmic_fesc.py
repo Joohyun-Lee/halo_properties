@@ -126,7 +126,7 @@ if overwrite or not exists:
         # else:
         #     overwrite=False
 
-        info_path = os.path.join(sim_path, f"output_{out_nb:06d}", "group_000001")
+        info_path = os.path.join(sim_path, "outputs", f"output_{out_nb:06d}", "group_000001")
 
         (
             t,

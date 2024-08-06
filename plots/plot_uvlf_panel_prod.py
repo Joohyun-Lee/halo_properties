@@ -21,6 +21,11 @@ def load_mags(sim_name, out_nb, dset, ext_key):
 
     print(analy_out)
 
+    analy_out = os.path.join(
+        analy_out,
+        "_neb_cont_cstSFR_5Myr_nebular_continuum_SB99_pseudo-f=1_pf_width=200Angstrom_emissivites_mags_betas",
+    )
+
     # try:
     datas = gather_h5py_files(analy_out, keys=[ext_key])
     # except OSError as e:
@@ -33,23 +38,24 @@ def load_mags(sim_name, out_nb, dset, ext_key):
 setup_plotting()
 
 # out_nbs=[14,23,34,42,52,65,82]
-out_nbs = [34, 42, 52, 65, 82, 106]
-overwrite = False
+out_nbs = [14, 23, 34, 42, 52, 65, 82, 106]  # , 106]
+overwrite = True
+# overwrite = False
 # stat_mthd = 'count'
-lls = [0.2]  # [0.1]
+lls = [0.15]  # [0.1]
 # lls = [0.1, 0.15, 0.2, 0.2, 0.2]
 assoc_mthds = ["stellar_peak"]
 # assoc_mthds = ['stellar_peak', 'stellar_peak', 'stellar_peak', 'fof_ctr', 'stellar_peak']
 r200s = [1.0]
 # r200s = [1.0, 1.0, 1.0, 1.0, 2.0]
 
-# ext_keys = [k for k in get_dust_att_keys() if "LMCavg_20" in k]
+ext_keys = [k for k in get_dust_att_keys() if "LMCavg_20" in k]  # dustier
 # ext_keys = [k for k in get_dust_att_keys() if "LMC2_10" in k]
-ext_keys = [k for k in get_dust_att_keys() if "WD_MW_5.5A_30_D03" in k]
+# ext_keys = [k for k in get_dust_att_keys() if "WD_MW_5.5A_30_D03" in k]
 ext_keys += ["no_dust"]
 mag_ext_keys = ["mag_" + k for k in ext_keys]
 cleans = [True]
-mps = [True]
+mps = [False]
 
 # print(mag_ext_keys)
 
@@ -85,7 +91,9 @@ for iplot, out_nb in enumerate(out_nbs):
     lines = []
     labels = []
 
-    info_path = os.path.join(sim_path, f"output_{out_nb:06d}", "group_000001")
+    info_path = os.path.join(
+        sim_path, "outputs", f"output_{out_nb:06d}", "group_000001"
+    )
 
     (
         t,

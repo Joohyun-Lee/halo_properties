@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
+from matplotlib.lines import Line2D
+
 import os
 import h5py
 
@@ -10,11 +13,15 @@ from halo_properties.params.params import *
 
 from plot_functions.generic.stat import mass_function
 from plot_functions.generic.plot_functions import make_figure
-from plot_functions.smf.smfs import plot_constraints, smf_plot, make_smf
+
+# from plot_functions.smf.smfs import plot_constraints, smf_plot, make_smf
+from plot_functions.generic.stat import mass_function
+from plot_functions.generic.plot_functions import mf_plot
+from scipy.stats import binned_statistic
 
 
-def load_stellar_masses(sim_name, out_nb, dset):
-    keys = ["Mst"]
+def load_masses(sim_name, out_nb, dset):
+    keys = ["Mst", "mass", "SFR10"]
 
     out, assoc_out, analy_out, suffix = gen_paths(sim_name, out_nb, dset)
 
@@ -26,8 +33,10 @@ def load_stellar_masses(sim_name, out_nb, dset):
     # print(f'OSError : {out_nb:d} ll={ll:f}, {rtwo_fact:f}xr200, association: {assoc_mthd:s}, {fesc_key:s}, xkey={xkey:s}')
     # print(e)
 
-    return datas["Mst"][()]
+    return datas["mass"][()], datas["Mst"][()], datas["SFR10"][()]
 
+
+Mp = 5.09e4
 
 out_nb = 106
 overwrite = False
@@ -54,10 +63,9 @@ rstars = [1.0, 1.0, 1.0, 1.0]  # , 1.0]  # , 1.0]
 cleans = [True, True, False, False]  # , False]  # , True]
 max_dtms = [0.5, 0.5, 0.5, 0.5]  # , 0.5]  # , 0.1]
 
-fig, ax = make_figure()
 
 nbins = 25
-mass_bins = np.logspace(4.0, 11, nbins)
+mass_bins = np.logspace(7.5, 12.5, nbins)
 
 info_path = os.path.join(sim_path, "outputs", f"output_{out_nb:06d}", "group_000001")
 
@@ -86,8 +94,11 @@ assert (
 ), "check input parameter lists' lengths"
 
 masses = []
-smfs = []
+hmfs = []
+fstars = []
+fsfrs = []
 labels = []
+lines = []
 errs = []
 # lines = []
 
@@ -108,7 +119,7 @@ for iplot, (assoc_mthd, ll, r200, rstar, mp, clean, dtm_max) in enumerate(
 
     out_file = os.path.join(
         out_path,
-        f"smfs_{out_nb:d}_{assoc_mthd:s}_{ll:.2f}_{r200:.1f}",
+        f"hmfs_{out_nb:d}_{assoc_mthd:s}_{ll:.2f}_{r200:.1f}",
     )
 
     if dtm_max != 0.5:
@@ -123,26 +134,48 @@ for iplot, (assoc_mthd, ll, r200, rstar, mp, clean, dtm_max) in enumerate(
     # print(out_file, exists)
 
     if overwrite or not exists:
-        stellar_masses = load_stellar_masses("CoDaIII", out_nb, dset)
+        halo_masses, stellar_masses, sfrs = load_masses("CoDaIII", out_nb, dset)
 
-        bins, smf, err = make_smf(stellar_masses, mass_bins, Lco)
+        bins, hmf, err = mass_function(halo_masses, mass_bins)
+
+        stellar_occupancy = binned_statistic(
+            halo_masses,
+            stellar_masses > 0,
+            bins=mass_bins,
+            statistic="mean",
+        )[0]
+
+        quenched_fraction = binned_statistic(  # not really quenched but opposite but OK who cares that much...
+            halo_masses,
+            sfrs > 0,
+            bins=mass_bins,
+            statistic="mean",
+        )[
+            0
+        ]
 
         with h5py.File(out_file, "w") as dest:
             dest.create_dataset("xbins", data=bins, dtype="f4")
-            dest.create_dataset("smf", data=smf, dtype="f8")
-            dest.create_dataset("err", data=err, dtype="f8")
+            dest.create_dataset("hmf", data=hmf, dtype="f4")
+            dest.create_dataset("err", data=err, dtype="f4")
+            dest.create_dataset("stellar_occupancy", data=stellar_occupancy, dtype="f4")
+            dest.create_dataset("quenched_fraction", data=quenched_fraction, dtype="f4")
 
     else:
         with h5py.File(out_file, "r") as dest:
             bins = dest["xbins"][()]
-            smf = dest["smf"][()]
+            hmf = dest["hmf"][()]
             err = dest["err"][()]
+            stellar_occupancy = dest["stellar_occupancy"][()]
+            quenched_fraction = dest["quenched_fraction"][()]
 
-    print(smf)
+    print(hmf)
 
     masses.append(bins)
-    smfs.append(smf)
+    hmfs.append(hmf)
     errs.append(err)
+    fstars.append(stellar_occupancy)
+    fsfrs.append(quenched_fraction)
     label = f"{assoc_mthd:s} ll={ll:.2f} {r200:.1f}Xr200"
     if rstar != 1.0:
         label += f" rstar={rstar:.1f}"
@@ -154,19 +187,49 @@ for iplot, (assoc_mthd, ll, r200, rstar, mp, clean, dtm_max) in enumerate(
 
 
 # print(masses, smfs)
-lines = smf_plot(fig, ax, masses, smfs, yerrs=errs)
+fig, axs = plt.subplots(
+    2, 1, figsize=(8, 8), sharex=True, sharey=False, height_ratios=[3, 1]
+)
 
-cst_lines, cst_labels = plot_constraints(fig, ax, redshift)
-
-labels += cst_labels
-lines += cst_lines
-
-ax.legend(lines, labels, framealpha=0.0)
+# make top panel for using make_axes_locatable
 
 
-fig.savefig(f"./figs/smf_comparison_{out_nb:d}", bbox_inches="tight")
+for mass, hmf, err, fsfr, fstar in zip(hmfs, masses, errs, fsfrs, fstars):
+    mf_line = mf_plot(
+        fig,
+        axs[0],
+        hmf,
+        mass,
+        linestyle="-",
+        xlabel=r"Halo Mass, $M_\odot$",
+        yerrs=err,
+    )
+
+    fstar_line = axs[1].plot(hmf, fstar, linestyle="--", color=mf_line.get_color())
+
+    fsfr_line = axs[1].plot(hmf, fsfr, linestyle=":", color=mf_line.get_color())
+    line = tuple([mf_line] + fstar_line + fsfr_line)
+
+    lines.append(line)
+
+    # print(line)
+
+axs[0].legend(lines, labels, framealpha=0.0)
+
+axs[0].set_ylabel("HMF, $dn/d\log M_\odot$")
+
+axs[1].legend(
+    [Line2D([], [], c="k", ls="--"), Line2D([], [], c="k", ls=":")],
+    ["Fraction of halos with stars", "Fraction of star-forming halos"],
+    framealpha=0.0,
+)
+
+for ax in axs:
+    ax.grid()
+
+fig.savefig(f"./figs/hmf_comparison_{out_nb:d}", bbox_inches="tight")
 
 
-ax.set_xlim(1e7, 1e11)
-ax.set_ylim(4e-6, 2e-1)
-fig.savefig(f"./figs/smf_comparison_high_mass_{out_nb:d}", bbox_inches="tight")
+axs[0].set_xlim(1e10, 5e12)
+axs[0].set_ylim(1e7, 1e10)
+fig.savefig(f"./figs/hmf_comparison_high_mass_{out_nb:d}", bbox_inches="tight")

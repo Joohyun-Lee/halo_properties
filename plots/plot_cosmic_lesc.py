@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.manifold import trustworthiness
 
 # from scipy.stats import binned_statistic
 from halo_properties.utils.utils import gather_h5py_files
@@ -62,15 +63,17 @@ def load_data(
 
 setup_plotting()
 
-# out_nbs = [14, 23, 34, 42, 52, 65, 82, 106]
+out_nbs = [14, 23, 34, 42, 52, 65, 82, 106]
 # out_nbs = [34, 42, 52, 65, 82, 106]
-out_nbs = [106]
+# out_nbs = [106]
 
 overwrite = False
-fesc_type = "gas"
+fesc_type = "full"
+# fesc_type = "gas"
 x_type = "mass"
 stat_mthd = "mean"
-ll = 0.2
+ll = 0.15
+# ll = 0.2
 # lls = [0.1, 0.15, 0.2, 0.2, 0.2]
 assoc_mthd = "stellar_peak"
 # assoc_mthds = ['stellar_peak', 'stellar_peak', 'stellar_peak', 'fof_ctr', 'stellar_peak']
@@ -152,10 +155,13 @@ if not exists or overwrite:
             L,
             px_to_m,
         ) = get_infos(
-            os.path.join(sim_path, f"output_{out:06d}/group_000001"), out, ldx
+            os.path.join(sim_path, "outputs", f"output_{out:06d}/group_000001"),
+            out,
+            ldx,
         )
         redshifts[i_out] = 1.0 / a - 1.0
 
+        missing = 0
         for isub in range(Nsub):
             ix, iy, iz = np.unravel_index(isub, (Nsub_pside, Nsub_pside, Nsub_pside))
             ixp1, iyp1, izp1 = ix + 1, iy + 1, iz + 1
@@ -179,16 +185,21 @@ if not exists or overwrite:
             # print(ifiles)
 
             for ifile in ifiles:
-                fesc, lintr = load_data(
-                    sim_name,
-                    out,
-                    dset,
-                    ifile=ifile,
-                )
-                cosmic_lesc[i_out, isub] += np.nansum(fesc * lintr) / (
-                    subLco**3 / (H0 / 100) ** 3
-                )  # Msun per comoving Mpc
-            # print((ix+1)/2.,(ix)/2.)
+                try:
+                    fesc, lintr = load_data(
+                        sim_name,
+                        out,
+                        dset,
+                        ifile=ifile,
+                    )
+                    cosmic_lesc[i_out, isub] += np.nansum(fesc * lintr) / (
+                        subLco**3 / (H0 / 100) ** 3
+                    )  # Msun per comoving Mpc
+                # print((ix+1)/2.,(ix)/2.)
+                except FileNotFoundError:
+                    print(f"File not found : {out:d} {ifile:d}")
+                    missing += 1
+                    continue
 
     lesc_global_avg = np.mean(cosmic_lesc, axis=1)
     # lesc_global_med=np.median(cosmic_lesc,axis=1)
@@ -225,9 +236,9 @@ line = plot_ndot(
     fig,
     ax,
     redshifts,
-    lesc_global_avg,
-    lo=lesc_global_p5,
-    hi=lesc_global_p95,
+    lesc_global_avg * 0.8,
+    lo=lesc_global_p5 * 0.8,
+    hi=lesc_global_p95 * 0.8,
 )
 cst_lines, cst_labels = plot_cosmic_ndot_constraints(ax, redshifts)
 # dustier_lines, dustier_labels = plot_(ax, redshift, fkey="fesc")

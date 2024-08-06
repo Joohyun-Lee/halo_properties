@@ -37,6 +37,12 @@ def load_fescs(
 
     out, assoc_out, analy_out, suffix = gen_paths(sim_name, out_nb, dataset)
 
+    # print(analy_out)
+    analy_out = os.path.join(
+        analy_out,
+        "_neb_cont_cstSFR_5Myr_nebular_continuum_SB99_pseudo-f=1_pf_width=200Angstrom_emissivites_mags_betas",
+    )
+
     if clean:
         analy_out += "_clean"
     # print(analy_out)
@@ -52,14 +58,14 @@ def load_fescs(
     return (datas[xkey][sfing], datas[fesc_keys[fesc_type]][sfing])
 
 
-out_nb = 106
+out_nb = 82
 overwrite = True
-fesc_type = "gas"
+fesc_type = "total"
 x_type = "mass"  # "Mst"
-lls = [0.2, 0.2, 0.2, 0.2]
-mps = [True, True, False, False]
+lls = [0.15, 0.2]
+# mps = [True, True, False, False]
 # lls = [0.1, 0.15, 0.2, 0.2, 0.2]
-assoc_mthds = ["stellar_peak", "stellar_peak", "stellar_peak", "stellar_peak"]
+assoc_mthds = ["stellar_peak", "stellar_peak"]  # , "stellar_peak", "stellar_peak"]
 # assoc_mthds = [
 #     "stellar_peak",
 #     "stellar_peak",
@@ -67,9 +73,10 @@ assoc_mthds = ["stellar_peak", "stellar_peak", "stellar_peak", "stellar_peak"]
 #     "fof_ctr",
 #     "stellar_peak",
 # ]
-r200s = [1.0, 1.0, 1.0, 1.0]
-rstars = [1.0, 1.0, 1.0, 1.0]
-cleans = [False, True, True, False]
+mps = [False, False]
+r200s = [1.0, 1.0]  # , 1.0, 1.0]
+rstars = [1.0, 1.0]  # , 1.0, 1.0]
+cleans = [True, True]  # , True, False]
 # r200s = [1.0, 1.0, 1.0, 1.0, 2.0]
 
 mnbins = 55
@@ -82,7 +89,7 @@ elif x_type == "Mst":
     plot_fct = fesc_Mst_plot
     xlabel = "$M_{\star}\,[M_{\odot}]$"
 
-info_path = os.path.join(sim_path, f"output_{out_nb:06d}", "group_000001")
+info_path = os.path.join(sim_path, "outputs", f"output_{out_nb:06d}", "group_000001")
 
 (
     t,
@@ -155,6 +162,9 @@ for iplot, (assoc_mthd, ll, r200, rstar, mp, clean) in enumerate(
             fesc_type=fesc_type,
             xkey=x_type,
         )
+
+        if ll == 0.15:  # correct ll=0.15 to be close to ll=0.2 result
+            mass *= 1.58
 
         xbins, counts = xy_stat(mass, fesc, xbins=mass_bins, mthd="count")
         xbins, median = xy_stat(mass, fesc, xbins=mass_bins, mthd="median")

@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import binned_statistic
+
+# from scipy.stats import binned_statistic
 from halo_properties.utils.utils import (
     gather_h5py_files,
     ll_to_fof_suffix,
@@ -51,15 +52,16 @@ def load_data(
 
 setup_plotting()
 
-out_nbs = [23, 34, 42, 52, 65, 82, 106]
+out_nbs = [14, 23, 34, 42, 52, 65, 82, 106]
 # out_nbs = [106]
 
-overwrite = False
+overwrite = True
 clean = True
+mp = False
 fesc_type = "gas"
 x_type = "mass"
 stat_mthd = "mean"
-ll = 0.2
+ll = 0.15
 # lls = [0.1, 0.15, 0.2, 0.2, 0.2]
 assoc_mthd = "stellar_peak"
 # assoc_mthds = ['stellar_peak', 'stellar_peak', 'stellar_peak', 'fof_ctr', 'stellar_peak']
@@ -68,7 +70,6 @@ r200 = 1.0
 
 mnbins = 55
 mass_bins = np.logspace(7.5, 12, mnbins)
-
 
 masses = []
 lescs = []
@@ -80,7 +81,9 @@ redshifts = []
 fig, ax = make_figure()
 
 for out_nb in out_nbs:
-    info_path = os.path.join(sim_path, f"output_{out_nb:06d}", "group_000001")
+    info_path = os.path.join(
+        sim_path, "outputs", f"output_{out_nb:06d}", "group_000001"
+    )
 
     (
         t,
@@ -157,7 +160,7 @@ for out_nb in out_nbs:
     # labels.append(f"{stat_mthd:s} {assoc_mthd:s} ll={ll:.2f} {r200:.1f}Xr200")
 
 for z, mass, lesc, lesc_sfing in zip(redshifts, masses, lescs, lescs_sfing):
-    # print(mass, lesc, lesc_sfing)
+    print(z, mass, lesc, lesc_sfing)
     lines.append(lesc_Mh_plot(fig, ax, mass, lesc, fesc_type, redshift=None))
     labels.append(f"{z:.1f}")
     lesc_Mh_plot(
