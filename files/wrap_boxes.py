@@ -1,4 +1,5 @@
 # from tkinter import N
+from json import load
 import numpy as np
 import os
 from halo_properties.files.read_fullbox_big import o_data_memmap
@@ -548,26 +549,23 @@ def new_get_overstep_hydro_cubed(
                     # fastest is memmap into pre-allocated empty numpy array of correct size
                     # total timeits for np.memmap, np.fromfile, hdf5 give 23.5s, 36.1s, 27s
 
-                    # try:
-                    # cur_box = o_data(data_name)
-                    # cur_box = o_data_memmap(data_name)
-
-                    # box[xlow:xhigh, ylow:yhigh, zlow:zhigh] = o_data_hdf5(
-                    #     data_name + ".hdf5",
-                    #     name,
-                    #     (
-                    #         (load_xlow, load_xhigh),
-                    #         (load_ylow, load_yhigh),
-                    #         (load_zlow, load_zhigh),
-                    #     ),
+                    # print(
+                    #     delta,
+                    #     size,
+                    #     xlow,
+                    #     xhigh,
+                    #     ylow,
+                    #     yhigh,
+                    #     zlow,
+                    #     zhigh,
+                    #     load_xlow,
+                    #     load_xhigh,
+                    #     load_ylow,
+                    #     load_yhigh,
+                    #     load_zlow,
+                    #     load_zhigh,
                     # )
-                    # box[xlow:xhigh, ylow:yhigh, zlow:zhigh] = o_data_memmap(
-                    #     data_name
-                    # )[
-                    #     load_xlow:load_xhigh,
-                    #     load_ylow:load_yhigh,
-                    #     load_zlow:load_zhigh,
-                    # ]
+
                     try:
                         # cur_box = o_data(data_name)
                         #     # cur_box = o_data_memmap(data_name)
@@ -579,21 +577,48 @@ def new_get_overstep_hydro_cubed(
                                 (load_zlow, load_zhigh),
                             ),
                         )
-                        # if debug and 'rho' in name:
-                        #     print(load_xlow, load_xhigh,
-                        #     load_ylow, load_yhigh,
-                        #     load_zlow, load_zhigh)
 
-                        #     print(xlow, xhigh,
-                        #     ylow, yhigh,
-                        #     zlow, zhigh)
+                    except (IndexError, FileNotFoundError, ValueError):
+                        print("Missing or corrupt box ... checking for alternatives")
 
-                        # input('enter to proceed')
-                    # cur_box=np.ones((size,size,size))*n_subcube
-                    except IndexError:
-                        print("Missing box assuming this is known ... Filling with 0s")
-                        cur_box = np.zeros((size, size, size))
-                        continue
+                        alt_joe = data_name.replace("pocvirk", "jlewis").replace(
+                            "reduced2", "reduced"
+                        )
+
+                        if os.path.isfile(alt_joe):
+
+                            box[xlow:xhigh, ylow:yhigh, zlow:zhigh] = o_data_memmap(
+                                alt_joe,
+                                (
+                                    (load_xlow, load_xhigh),
+                                    (load_ylow, load_yhigh),
+                                    (load_zlow, load_zhigh),
+                                ),
+                            )
+
+                        else:
+
+                            alt_piere = data_name.replace("reduced2", "reduced")
+
+                            if os.path.isfile(alt_piere):
+                                box[xlow:xhigh, ylow:yhigh, zlow:zhigh] = o_data_memmap(
+                                    alt_piere,
+                                    (
+                                        (load_xlow, load_xhigh),
+                                        (load_ylow, load_yhigh),
+                                        (load_zlow, load_zhigh),
+                                    ),
+                                )
+                            else:
+
+                                print("No alternative found ... Filling with 0s")
+                                print(f"check file {data_name:s}")
+                                box[xlow:xhigh, ylow:yhigh, zlow:zhigh] = np.zeros(
+                                    (size, size, size)
+                                )
+                                continue
+                    #     # cur_box = np.zeros((size, size, size))
+                    #     continue
 
                     if debug and "rho" in name:
                         # diag plot
@@ -611,7 +636,26 @@ def new_get_overstep_hydro_cubed(
     # return box
 
 
-def read_cutout(data_pth, fields, ctr, size, ldx=8192, subsize=512):
+def read_cutout(data_pth: str, fields: list, ctr, size, ldx=8192, subsize=512):
+    """
+    For a given central position ctr, read a cutout of size "size" from the data in data_pth
+    the gaseous data is returned in code units!!!! You need to convert them to physical units
+    using the unit_... conversion factors from the simulation info files.
+
+    data_pth is the path to the simulation data files... if you don't know what to use,
+    you should take what ever is working for "box_path" in halo_propertiers/params/params.py
+    data_pth should then be [box_path]/output_[XXXXXX], where [XXXXXX] is the 6 digit 0-padded
+    snapshot number you want to read from
+
+    ctr and size are in number of cells
+
+    fields is a list of strings of the fields to read
+    names should be like the file names in data_pth so xion, rho, temp, Z, dust, vx, vy, vz
+
+    ldx is the size of the full box in cells (8192 in CoDa III)
+    subsize is the size of the subcubes in cells (512 in CoDa III)
+    """
+
     ctr = np.asarray(ctr)
     ctr_subs = np.int32(ctr // (subsize))
     ctr_in_sub = np.int32(ctr % (subsize))
@@ -729,15 +773,15 @@ def read_cutout(data_pth, fields, ctr, size, ldx=8192, subsize=512):
                                 data_pth, "%s_%05i" % (field, nb_to_get)
                             )
 
-                            cutout[
-                                ifield, xlow:xhigh, ylow:yhigh, zlow:zhigh
-                            ] = o_data_memmap(
-                                data_name,
-                                (
-                                    (load_xlow, load_xhigh),
-                                    (load_ylow, load_yhigh),
-                                    (load_zlow, load_zhigh),
-                                ),
+                            cutout[ifield, xlow:xhigh, ylow:yhigh, zlow:zhigh] = (
+                                o_data_memmap(
+                                    data_name,
+                                    (
+                                        (load_xlow, load_xhigh),
+                                        (load_ylow, load_yhigh),
+                                        (load_zlow, load_zhigh),
+                                    ),
+                                )
                             )
 
                     except IndexError:

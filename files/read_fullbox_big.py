@@ -2,6 +2,7 @@
 import numpy as np
 import os
 import h5py
+import sys
 
 
 def o_data(data_pth):
@@ -30,7 +31,7 @@ def o_data(data_pth):
     return np.reshape(np.frombuffer(bitdata, dtype="f"), (nz, ny, nx), order="A")
 
 
-def o_data_memmap(data_pth, slices):
+def o_data_memmap(data_pth, slices=None):
     """
     Fetch data from fortran binary at data_pth
     """
@@ -55,11 +56,19 @@ def o_data_memmap(data_pth, slices):
 
     # bitdata = np.zeros((nx * ny * nz * 4), dtype="S1")
 
-    ((x0, x1), (y0, y1), (z0, z1)) = slices
+    if slices == None:
+        x0, y0, z0 = 0, 0, 0
+        x1, y1, z1 = nx, ny, nz
+    else:
+        ((x0, x1), (y0, y1), (z0, z1)) = slices
 
-    return np.memmap(
-        data_pth, offset=init_offset, shape=(nx, ny, nz), dtype="f4", mode="r"
-    )[x0:x1, y0:y1, z0:z1]
+    # print(x0, x1, y0, y1, z0, z1, nx, ny, nz)
+
+    return np.squeeze(
+        np.memmap(
+            data_pth, offset=init_offset, shape=(nx, ny, nz), dtype="f4", mode="r"
+        )[x0:x1, y0:y1, z0:z1]
+    )
 
 
 def o_data_hdf5(data_pth, key, slices):
