@@ -10,10 +10,19 @@ star_path = (
     f"/lustre/orion/proj-shared/ast031/pocvirk/{sim_name:s}/prod_sr/reduced/stars"
 )
 box_path = (
-    f"/lustre/orion/proj-shared/ast031/pocvirk/{sim_name:s}/prod_sr/reduced/fullbox"
+    # f"/lustre/orion/proj-shared/ast031/pocvirk/{sim_name:s}/prod_sr/reduced/fullbox"
+    f"/lustre/orion/proj-shared/ast031/pocvirk/{sim_name:s}/prod_sr/reduced2/fullbox"
 )
 
-fof_path = "/lustre/orion/proj-shared/ast031/conaboy/fof/"
+analysis_output_root = (
+    "/lustre/orion/proj-shared/ast031/jlewis/",
+    sim_name + "_analysis",
+)
+
+fof_path = (
+    "/lustre/orion/ast031/proj-shared/pocvirk/CoDaIII/prod_sr/fof_luke/fof_proj-shared"
+)
+# fof_path = "/lustre/orion/proj-shared/ast031/conaboy/fof/"
 # fof_path = "/lustre/orion/proj-shared/ast031/jlewis/CoDaIII/prod_sr/mp_cats/"  # MP cats
 
 sixdigits = True
@@ -65,3 +74,5 @@ G = 6.67408e-11  # m^3 kg^-1 s^-2
 sigma_UV = 2.493e-22  # from codaii paper 1.63e-22#m^2  codai paper
 c = 299792458  # m.s^-1
 # fesc_star = 0.1
+
+nu0_lya = c / 1215.6701e-10  # Hz
