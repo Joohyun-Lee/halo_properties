@@ -37,14 +37,14 @@ from halo_properties.src.bpass_fcts import (
 )
 from halo_properties.src.ray_fcts import (
     sph_2_cart,
-    cart_2_sph,
-    sum_over_rays_bias,
-    sum_over_rays_bias_nopython,
+    # cart_2_sph,
+    # sum_over_rays_bias,
+    # sum_over_rays_bias_nopython,
     sum_over_rays_bias_multid,
 )
 from halo_properties.dust.dust_opacity import (
-    shoot_star_path_cheap,
-    shoot_star_path,
+    # shoot_star_path_cheap,
+    # shoot_star_path,
     shoot_star_path_cheap_multid,
 )
 
@@ -335,6 +335,7 @@ def compute_fesc(
     subnb=None,
     clean=True,
     max_DTM=0.5,
+    n_subcubes=4096,
 ):
     # fesc_debug_avg = 0
     # debug_counts = 0
@@ -406,18 +407,22 @@ def compute_fesc(
     plt.rcParams.update({"font.size": 18})
 
     # find number of subcubes
-    if rank == 0:
-        data_files = os.listdir(os.path.join(box_path, output_str))
-        rho_files = [f for f in data_files if f[:3] == "rho" and "." not in f]
+    if n_subcubes == None:
+        if rank == 0:
 
-        n_subcubes = len(rho_files)
 
-    else:
-        n_subcubes = None
 
-    # print(data_files, n_subcubes)
+            data_files = os.listdir(os.path.join(box_path, output_str))
+            rho_files = [f for f in data_files if f[:3] == "rho" and "." not in f]
 
-    n_subcubes = comm.bcast(n_subcubes, root=0)
+            n_subcubes = len(rho_files)
+
+            print(f"Didn't get a specified number of gas subcubes, assuming I can count the gas density outputs 'rho_XXXXXX' in {box_path:s}")
+            print(f"... doing so I found {n_subcubes:d} subcubes")
+
+        # print(data_files, n_subcubes)
+
+        n_subcubes = comm.bcast(n_subcubes, root=0)
 
     # print(rank, n_subcubes)
 
@@ -426,7 +431,7 @@ def compute_fesc(
     ), "Couldn't find any 'rho' subcubes... Are you sure about the path?"
     # print(n_subcubes)
     subs_per_side = int(np.round(n_subcubes ** (1.0 / 3)))
-    # print(subs_per_side)
+    print(subs_per_side)
 
     sub_side = int(float(ldx) / subs_per_side)
     # print(sub_side)
@@ -472,7 +477,7 @@ def compute_fesc(
         if subnb != None:
             print("Only processing subcube #%i" % subnb)
 
-    dist_obs = 345540.98618977674  # distance to obs point from box (0,0,0); in number of cells for z=6
+    # dist_obs = 345540.98618977674  # distance to obs point from box (0,0,0); in number of cells for z=6
 
     (
         mags,
@@ -1127,21 +1132,18 @@ def compute_fesc(
 
                         # print(sub_halo_tot_star_nb[ind] - sub_halo_star_nb[ind], sub_halo_tot_star_nb[ind])
 
-                        halo_stellar_mass[ind] = np.sum(cur_stars["mass"]) / (
-                            1 - eta_sn
-                        )
-                        halo_fluxes = (
-                            cur_stars["mass"]
-                            / (1 - eta_sn)
-                            * 10
-                            ** (
-                                -get_star_mags_metals(
-                                    cur_stars["age"],
-                                    cur_stars["Z/0.02"] * 0.02,
-                                    mags_fct,
-                                )
-                                / 2.5
+                        corrected_star_masses = cur_stars["mass"] / (1 - eta_sn)
+                        # corrected_star_masses[cur_stars["age"] > 10.0] /= 1 - eta_sn
+
+                        halo_stellar_mass[ind] = np.sum(corrected_star_masses)
+
+                        halo_fluxes = corrected_star_masses * 10 ** (
+                            -get_star_mags_metals(
+                                cur_stars["age"],
+                                cur_stars["Z/0.02"] * 0.02,
+                                mags_fct,
                             )
+                            / 2.5
                         )
 
                         cur_star_luminosity = (
@@ -1153,8 +1155,7 @@ def compute_fesc(
                                     xis_fct,
                                 )
                             )
-                            * cur_stars["mass"]
-                            / (1 - eta_sn)
+                            * corrected_star_masses
                         )  # ph/s
 
                         low_conts = get_star_mags_metals(
@@ -1180,10 +1181,10 @@ def compute_fesc(
                             high_conts += neb_high_conts
 
                         halo_stAgeWmass[ind] = np.average(
-                            cur_stars["age"], weights=cur_stars["mass"]
+                            cur_stars["age"], weights=corrected_star_masses
                         )
                         halo_stZ_wStMass[ind] = np.average(
-                            cur_stars["Z/0.02"] * 0.02, weights=cur_stars["mass"]
+                            cur_stars["Z/0.02"] * 0.02, weights=corrected_star_masses
                         )
 
                         halo_oldest[ind] = np.max(cur_stars["age"])
@@ -1428,7 +1429,7 @@ def compute_fesc(
                             )
 
                             halo_betas[iset, ind] = comp_betas(
-                                cur_stars["mass"] / (1 - eta_sn),
+                                corrected_star_masses,
                                 high_conts,
                                 low_conts,
                                 star_taus[iset],
