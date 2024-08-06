@@ -1,6 +1,7 @@
 import numpy as np
-import string
-import argparse
+
+# import string
+# import argparse
 import os
 from ..utils.output_paths import *
 from ..utils.utils import *
@@ -93,10 +94,10 @@ def read_assoc(
                     * (z < bounds[2][1])
                 )
 
+            cond = np.where(cond)[0]
         else:
-            cond = np.full(x.shape, True)
-
-        # print(np.min(F["mass"]),np.max(F["mass"]),mass_cut)
+            # cond = np.full(x.shape, True)
+            cond = np.arange(x.shape[0])
 
         if mass_cut != None:
 
@@ -104,30 +105,56 @@ def read_assoc(
 
             if single_val:
 
-                mass_cond = F["mass"][()] > mass_cut
+                cond = cond[F["mass"][()][cond] > mass_cut]
+                # cond = cond * (F["mass"] > mass_cut)
 
             else:
                 min_mass, max_mass = mass_cut
-                mass_cond = (F["mass"][()] > min_mass) * (F["mass"][()] < max_mass)
+                cur_mass_vect = F["mass"][()][cond]
+                cond = cond[(cur_mass_vect > min_mass) * (cur_mass_vect < max_mass)]
+                # cond = cond * ((F["mass"] > min_mass) * (F["mass"] < max_mass))
 
-            cond = cond * mass_cond
+            # cond = cond * mass_cond
+
+        # print(np.count_nonzero(cond))
+        # print(len(cond))
 
         if st_mass_cut != None:
 
+            # print("stellar mass cut")
+
             single_val = np.all(np.prod(st_mass_cut) == st_mass_cut)
+
+            # print(st_mass_cut, single_val, cond)
 
             if single_val:
 
-                mass_cond = F["stellar mass"][()] > st_mass_cut
+                # print(F["stellar mass"][cond])
+                # print(F["stellar mass"][cond] > st_mass_cut)
+                # print(cond[F["stellar mass"][cond] > st_mass_cut])
+
+                cond = cond[F["stellar mass"][()][cond] > st_mass_cut]
+                # cond = cond * (F["stellar mass"][()] > st_mass_cut)
+
+                # print(cond)
+                # print(len(cond))
+
+                # print(F["stellar mass"][cond])
 
             else:
                 min_mass, max_mass = st_mass_cut
 
-                mass_cond = (F["stellar mass"][()] > min_mass) * (
-                    F["stellar mass"][()] < max_mass
-                )
+                cur_mass_vect = F["stellar mass"][()][cond]
+                cond = cond[(cur_mass_vect > min_mass) * (cur_mass_vect < max_mass)]
 
-            cond = cond * mass_cond
+                # cond = cond * (
+                #     (F["stellar mass"] > min_mass) * (F["stellar mass"] < max_mass)
+                # )
+
+            # cond = cond * mass_cond
+
+        # print(np.count_nonzero(cond))
+        # print(len(cond))
 
         return_types = {
             "ids": "i8",
@@ -153,15 +180,20 @@ def read_assoc(
         for key in return_keys:
             return_dtype.append((key, return_types[key]))
 
-        l = np.count_nonzero(cond)
+        l = len(cond)
+        # l = np.count_nonzero(cond)
         fofs = np.empty(
             (l),
             return_dtype,
         )
 
+        # print(F["stellar mass"][cond])
+
         for key in return_keys:
+            # print(key)
             if key in read_2_return.keys():
-                fofs[key] = F[read_2_return[key]][cond]
+                # print(key, read_2_return[key], len(cond), l)
+                fofs[key] = F[read_2_return[key]][()][cond]
             elif key == "x":
                 fofs[key] = x[cond]
             elif key == "y":

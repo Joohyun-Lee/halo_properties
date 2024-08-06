@@ -107,20 +107,20 @@ def clean_assoc(
 
         u_halo_coords = np.array(sub_halo_tab[u_halo_args][["x", "y", "z"]].tolist())
 
-        # read = False
-        # attempts = 0
-        # while not read and attempts < 3:
-        #     try:
-        #         attempts += 1
+        read = False
+        attempts = 0
+        while not read and attempts < 10:
+            try:
+                attempts += 1
 
-        star = read_specific_stars(
-            os.path.join(star_path, f"output_{out_nb:06d}"),
-            np.asarray([tgt_unique]),
-        )
+                star = read_specific_stars(
+                    os.path.join(star_path, f"output_{out_nb:06d}"),
+                    np.asarray([tgt_unique]),
+                )
 
-        # except OSError:
-        #     sleep(1)
-        #     pass
+            except:
+                sleep(5)
+                pass
 
         # assert attempts < 3, f"rank {rank:d} failed to read star : {tgt_unique:d}... "
 

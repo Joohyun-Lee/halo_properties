@@ -1,2 +1,2 @@
 ###
-from halo_properties.params.params import *
+from ..params.params import *

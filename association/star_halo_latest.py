@@ -296,6 +296,9 @@ def assoc_stars_to_haloes(
         halos, halo_fnbs = o_mp_fof(os.path.join(fof_path, output_str), Mp)
 
     else:
+        if ll == 0.15 and out_nb in [106, 116]:
+            fof_suffix += "_ll0_0p200"
+        print(os.path.join(fof_path, fof_suffix))
         halos, halo_fnbs = o_luke_fof(
             os.path.join(fof_path, fof_suffix),
             output_str,
@@ -463,10 +466,12 @@ def assoc_stars_to_haloes(
             out_halos.create_dataset(
                 "ID", data=np.int64(halos[:, 0]), dtype=np.int64, compression="lzf"
             )
-            out_halos.create_dataset(
-                "fnb", data=halo_fnbs, dtype=np.int32, compression="lzf"
-            )
-            # out_halos.create_dataset(
+
+            if halo_fnbs is not None:
+                out_halos.create_dataset(
+                    "fnb", data=halo_fnbs, dtype=np.int32, compression="lzf"
+                )
+                # out_halos.create_dataset(
             #     "lnb", data=halo_lnbs, dtype=np.int32, compression="lzf"
             # )
             out_halos.create_dataset(
