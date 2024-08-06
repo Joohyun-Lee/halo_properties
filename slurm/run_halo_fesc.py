@@ -89,6 +89,13 @@ Arg_parser.add_argument(
     default=None,
 )
 
+Arg_parser.add_argument(
+    "--nsubcubes",
+    type=int,
+    help="number of subcubes over which the gas data is split",
+    default=4096,
+)
+
 args = Arg_parser.parse_args()
 
 out_nb = args.nb
@@ -100,6 +107,7 @@ dilate = args.dilate
 fesc_rad = args.fesc_rad
 rstar = args.rstar
 sub_nb = args.sub_nb
+n_subcubes = args.nsubcubes
 
 compute_fesc(
     out_nb,
@@ -115,4 +123,5 @@ compute_fesc(
     subnb=sub_nb,
     clean=args.clean,
     max_DTM=args.max_DTM,
+    n_subcubes=n_subcubes,
 )

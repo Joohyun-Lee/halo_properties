@@ -106,7 +106,7 @@ export SLURM_CPU_BIND=none
 # mpiexec -np $SLURM_NTASKS python -u star_halo_latest.py $1 8192 /lustre/orion/proj-shared/ast031/pocvirk/CoDaIII/prod_sr/ CoDaIII /lustre/orion/proj-shared/ast031/conaboy/fof/ll_0p100 --rtwo_fact=2 --assoc_mthd='stellar_peak'
 # mpiexec -np $SLURM_NTASKS python -u star_halo_latest.py $1 8192 /lustre/orion/proj-shared/ast031/pocvirk/CoDaIII/prod_sr/ CoDaIII /lustre/orion/proj-shared/ast031/conaboy/fof/ll_0p200 --rtwo_fact=2 --assoc_mthd='stellar_peak'
 
-srun -n $SLURM_NTASKS python -u run_association.py $1 --rtwo_fact=1.0 --assoc_mthd='stellar_peak' --ll=0.15
+srun -n $SLURM_NTASKS python -u run_association.py $1 --rtwo_fact=1.0 --assoc_mthd='stellar_peak' --ll=0.15 #--overwrite
 
 #with MP's segmentation
 # mpirun -np $SLURM_NTASKS python -u run_association.py $1 --rtwo_fact=1 --assoc_mthd='stellar_peak' --mp --overwrite

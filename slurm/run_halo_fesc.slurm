@@ -31,9 +31,9 @@ snap=$1
 # mpirun -np $SLURM_NTASKS --bind-to core --report-bindings  python -u run_halo_fesc.py $snap --assoc_mthd="stellar_peak" --ll=0.2 --rtwo_fact=1.0 --dilate=$dilate  --fesc_rad=1.0 --clean
 
 # mpiexec -np $SLURM_NTASKS --bind-to core --report-bindings  python -u run_halo_fesc.py $snap --assoc_mthd="stellar_peak" --ll=0.2 --rtwo_fact=1.0 --dilate=$dilate  --clean --max_DTM=0.05
-mpiexec -np $SLURM_NTASKS --bind-to core --report-bindings  python -u run_halo_fesc.py $snap --assoc_mthd="stellar_peak" --ll=0.2 --rtwo_fact=1.0 --dilate=$dilate  --clean 
-mpiexec -np $SLURM_NTASKS --bind-to core --report-bindings  python -u run_halo_fesc.py $snap --assoc_mthd="stellar_peak" --ll=0.15 --rtwo_fact=1.0 --dilate=$dilate  --clean 
-mpiexec -np $SLURM_NTASKS --bind-to core --report-bindings  python -u run_halo_fesc.py $snap --assoc_mthd="stellar_peak" --ll=0.10 --rtwo_fact=1.0 --dilate=$dilate  --clean 
+# mpiexec -np $SLURM_NTASKS --bind-to core --report-bindings  python -u run_halo_fesc.py $snap --assoc_mthd="stellar_peak" --ll=0.2 --rtwo_fact=1.0 --dilate=$dilate  --clean 
+mpiexec -np $SLURM_NTASKS --bind-to core --report-bindings  python -u run_halo_fesc.py $snap --assoc_mthd="stellar_peak" --ll=0.15 --rtwo_fact=1.0 --dilate=$dilate  --clean --nsubcubes 4096
+# mpiexec -np $SLURM_NTASKS --bind-to core --report-bindings  python -u run_halo_fesc.py $snap --assoc_mthd="stellar_peak" --ll=0.10 --rtwo_fact=1.0 --dilate=$dilate  --clean 
 # mpiexec -np $SLURM_NTASKS --bind-to core --report-bindings  python -u run_halo_fesc.py $snap --assoc_mthd="stellar_peak" --ll=0.2 --rtwo_fact=1.0 --dilate=$dilate  --clean --max_DTM=0.1
 
 # mpiexec -np $SLURM_NTASKS --bind-to core --report-bindings  python -u run_halo_fesc.py $snap --assoc_mthd="stellar_peak" --ll=0.2 --rtwo_fact=1.0 --dilate=$dilate  --mp
@@ -45,7 +45,7 @@ mpiexec -np $SLURM_NTASKS --bind-to core --report-bindings  python -u run_halo_f
 #mpiexec -np $SLURM_NTASKS --bind-to core --report-bindings  python -u run_halo_fesc.py $snap --assoc_mthd="stellar_peak" --ll=0.2 --rtwo_fact=0.5 --dilate=$dilate  --mp --fesc_rad=2.0
 # mpiexec -np $SLURM_NTASKS --bind-to core --report-bindings  python -u run_halo_fesc.py $snap --assoc_mthd="stellar_peak" --ll=0.2 --rtwo_fact=1.0 --dilate=$dilate  --mp
 # mpiexec -np $SLURM_NTASKS --bind-to core --report-bindings  python -u run_halo_fesc.py $snap --assoc_mthd="stellar_peak" --ll=0.2 --rtwo_fact=1.0 --dilate=$dilate  --mp --rstar=0.5
-wait
+# wait
 # mpiexec -np $SLURM_NTASKS --bind-to core --report-bindings  python -u run_halo_fesc.py $snap --assoc_mthd="stellar_peak" --ll=0.2 --rtwo_fact=1.0 --dilate $dilate --overwrite
 # wait
 # mpiexec -np $SLURM_NTASKS --bind-to core --report-bindings  python -u run_halo_fesc.py $snap --assoc_mthd="stellar_peak" --ll=0.1 --rtwo_fact=1.0 --dilate $dilate #--overwrite

@@ -1,7 +1,7 @@
 #! /bin/bash -l
 #SBATCH -A AST031
 #SBATCH -J clean_stellar_association_stpeak
-#SBATCH --nodes=8
+#SBATCH --nodes=4
 #SBATCH --ntasks-per-node=16
 #SBATCH --cpus-per-task 1
 #SBATCH --exclusive
