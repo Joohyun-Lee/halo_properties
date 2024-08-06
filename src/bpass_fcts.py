@@ -111,13 +111,19 @@ def get_SFR(stars, age_lim):
     stars is rows of (mass,x,y,z,age)
     """
 
+    masses = stars["mass"]
+    ages = stars["age"]
+    lost_eta_sn = ages > 10.0
+
+    masses[lost_eta_sn] = masses[lost_eta_sn] / (1 - eta_sn)
+
     underage_stars = stars["age"] < age_lim
     formd_mass = 0
 
     if np.sum(underage_stars) > 0:
-        formd_mass = stars["mass"][underage_stars]
+        formd_mass = [underage_stars]
 
-    return np.sum(formd_mass) / (1 - eta_sn) / (age_lim * 1e6)
+    return np.sum(formd_mass) / (age_lim * 1e6)
 
 
 def get_lum(stars, lum, age_lim):
