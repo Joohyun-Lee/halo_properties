@@ -139,7 +139,7 @@ def check_assoc_keys(assoc):
 
 def gen_paths(sim_name, out_nb, dataset):
     out = os.path.join(
-        "/lustre/orion/proj-shared/ast031/jlewis/", sim_name + "_analysis"
+        "/lustre/orion/proj-shared/ast031/joohyunlee/", sim_name + "_analysis"
     )
 
     fof_suffix = ll_to_fof_suffix(dataset.ll)
