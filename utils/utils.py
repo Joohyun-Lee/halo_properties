@@ -1,17 +1,17 @@
 import numpy as np
 import os
-from mpi4py import MPI
+#from mpi4py import MPI
 import h5py
 
 
-def sum_arrays_to_rank0(comm, array, op=MPI.SUM):
+'''def sum_arrays_to_rank0(comm, array, op=MPI.SUM):
     recvbuf = None
     if comm.rank == 0:
         recvbuf = np.empty_like(array)
 
     comm.Reduce(array, recvbuf, op)
 
-    return recvbuf
+    return recvbuf'''
 
 
 def scatter_arrays_rank0(comm, array, dtype=np.int64, debug=False):
